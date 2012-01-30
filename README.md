@@ -1,6 +1,6 @@
 # start-stop-daemon
 
-An 1-function Node.js module to easily create native `child_process.fork` start-stop-daemon scripts.
+An 1-function Node.js module to easily create native `child_process.fork` start-stop-daemon scripts.  
 Created daemons are self-monitored and restart automatically when crashing (a custom crash handler can be attached too).  
 
 ## Installation
