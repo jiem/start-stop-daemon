@@ -48,6 +48,7 @@ Restart the daemon, append stdout to the previous stdout file, append the crash 
 
 ## Example 1: `server.js`, a stupid web server daemon
 
+``` js
     var startStopDaemon = require('start-stop-daemon');
     var http = require('http');
 
@@ -55,8 +56,9 @@ Restart the daemon, append stdout to the previous stdout file, append the crash 
       http.createServer(function(req, res) {
         console.log(req.connection.remoteAddress + ' at ' + new Date());
         res.end(new Date() + ': Hello world');
-      }).listen(8080);
-    });
+    }).listen(8080);
+});
+```
 
 Execute the command `node server.js start`  
 Play with the server in your browser on http://localhost:8080  
@@ -66,6 +68,7 @@ Check the stdout file `server.out`.
 
 ## Example 2: `crasher.js`, a timer daemon that crashes every second
 
+``` js
     var startStopDaemon = require('start-stop-daemon');
 
     var options = {
@@ -96,6 +99,7 @@ Check the stdout file `server.out`.
         console.log('0.' + 2 * count++ + ' second');             
       }, 200);      
     });
+```
 
 Execute the command `node crasher.js start`  
 Wait 4 seconds then execute the command `node crasher.js status` to check that the daemon correctly exited  
