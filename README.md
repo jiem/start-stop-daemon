@@ -56,8 +56,8 @@ Restart the daemon, append stdout to the previous stdout file, append the crash 
       http.createServer(function(req, res) {
         console.log(req.connection.remoteAddress + ' at ' + new Date());
         res.end(new Date() + ': Hello world');
-    }).listen(8080);
-});
+      }).listen(8080);
+    });
 ```
 
 Execute the command `node server.js start`  
