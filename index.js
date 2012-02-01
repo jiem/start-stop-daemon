@@ -331,6 +331,9 @@ function _runner(self) {
   process.stdout.write = function(x) {
     stdoutStream._hasPendingData = !stdoutStream.write(x);
   }
+  process.stderr.write = function(x) {
+    errorStream._hasPendingData = !errorStream.write(x);
+  }
   process.on('uncaughtException', function(e) {      
     errorStream._hasPendingData = !errorStream.write(new Date().toString() + ':\n' + e.stack + '\n\n');
     self.emit('crash', e);    
