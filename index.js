@@ -10,7 +10,8 @@ var IN_RUNNER, STDOUT_STREAM, ERROR_STREAM;
 //==============================================================================
 function startStopDaemon(options, action) {
 
-  var daemon;
+  var argv = process.argv;
+  var daemon, i;
 
   if (typeof options === 'function') {
     action = options;
@@ -18,14 +19,24 @@ function startStopDaemon(options, action) {
   }
 
   if (!options)
-    options = startStopDaemon.defaultOptions;
+    options = {};
 
   if (typeof action !== 'function')
     throw new TypeError('invalid arguments');
-  
+
+  if ((i = argv.indexOf('--max-crash') + 1))
+    (options.maxCrash = parseInt(argv[i]));
+  if ((i = argv.indexOf('--pid') + 1))
+    (options.pidFile = argv[i]);  
+  if ((i = argv.indexOf('--out') + 1))
+    (options.outFile = argv[i]) && (options.commandLineOut = true);
+  if ((i = argv.indexOf('--err') + 1))
+    (options.errFile = argv[i]) && (options.commandLineErr = true);
+  options.logAppend = argv.indexOf('--logAppend') !== -1;
+
   daemon = new StartStopDaemon(options, action);
 
-  switch (process.argv[2]) {
+  switch (argv[2]) {
     case 'start':
       _start(daemon);
       break;
@@ -48,7 +59,15 @@ function startStopDaemon(options, action) {
       action();
       break;
     default:
-      console.log('\033[31mUsage: node ' + SCRIPT_NAME  + ' {run|start|stop|restart|status}\033[39m');
+      console.log('\033[31m'
+        + 'Usage: node ' + SCRIPT_NAME  + ' {run|start|stop|restart|status}\n'
+        + 'Options:\n'
+        + '  --logAppend           append to existing stdout and stderr files\n'
+        + '  --pid <pidFile>       specify pid file\n'
+        + '  --out <stdoutFile>    specify stdout file\n'
+        + '  --err <stderrFile>    specify stderr file\n'
+        + '  --max-crash <value>   specify maximum number of crashes by minute'
+        + '\033[39m');
   }
 
 }
@@ -112,7 +131,7 @@ startStopDaemon.cleanCrash = function(exitOrRestart) {
       });
       wait++;
     }
-    if (ERROR_STREAM._hasPendingData) {
+    if (ERROR_STREAM !== STDOUT_STREAM && ERROR_STREAM._hasPendingData) {
       ERROR_STREAM.on('drain', function() {
         ERROR_STREAM.end();
         if (!--wait)
@@ -133,6 +152,9 @@ function StartStopDaemon(options, action) {
   this.outFile = options.outFile || defaultOptions.outFile;
   this.errFile = options.errFile || defaultOptions.errFile;
   this.maxCrash = options.maxCrash || defaultOptions.maxCrash;
+  this.commandLineOut = options.commandLineOut;
+  this.commandLineErr = options.commandLineErr;
+  this.logAppend = options.logAppend;
   this.action = action;
   this.crashDates = [];
   this.on('start', options.onStart || defaultOptions.onStart);
@@ -250,8 +272,10 @@ function _starter(self) {
   var command = process.argv.shift();
   var startTime = Date.now();
   var child;
+  self.commandLineOut || process.argv.push('--out', self.outFile);
+  self.commandLineErr || process.argv.push('--err', self.errFile);
   process.argv[1] = '--monitor';
-  process.argv.splice(2, 0, '--out', self.outFile, '--err', self.errFile, '--start', startTime);
+  process.argv.push(startTime);
   child = child_process.spawn(command, process.argv, {setsid: true});
   if (child) {
     fs.writeFileSync(self.pidFile, child.pid + '|' + startTime);
@@ -268,9 +292,10 @@ function _monitor(self) {
   var script = process.argv[1];
   var runner;
 
-  function fork(logAppend) {
-    process.argv[8] = logAppend;
+  function fork() {
     runner = child_process.fork(script, process.argv, {setsid: true});
+    if (process.argv.indexOf('--logAppend') === -1)
+      process.argv.splice(process.argv.length - 1, 0, '--logAppend');
     if (runner) {
       runner.on('message', function(m) {
         var currentDate, i;
@@ -282,7 +307,7 @@ function _monitor(self) {
           }
           if (self.crashDates.length < self.maxCrash) {
             self.crashDates.unshift(currentDate);
-            fork('true');
+            fork();
           } else {
             try {fs.unlinkSync(self.pidFile);} catch (e) {}
             process.exit(1);
@@ -299,35 +324,29 @@ function _monitor(self) {
   }
   
   process.on('SIGTERM', function() {
-    if (runner) {
-      try {
-        process.kill(runner.pid);
-      } catch (e) {}  
-    }
+    if (runner)
+      try {process.kill(runner.pid);} catch (e) {}      
     process.exit(0);
   });
-  process.argv.splice(0, 2);
-  process.argv.splice(7, 0, '--logAppend', '');
+  process.argv.splice(0, 2);  
   process.argv[0] = '--runner';
-  
-  fork('false');
+      
+  fork();
   
 }
 
 //==============================================================================
 function _runner(self) {
-
-  var outFile = process.argv[4];
-  var errFile = process.argv[6];
-  var startTime = parseInt(process.argv[8]);
-  var logAppend = process.argv[10] === 'true';
-  var options = {encoding: 'utf8', flags: logAppend ? 'a+' : 'w+'};
-  var stdoutStream = STDOUT_STREAM = fs.createWriteStream(outFile, options);
-  var errorStream = ERROR_STREAM = fs.createWriteStream(errFile, options);
+  
+  var startTime = parseInt(process.argv.pop()); 
+  var options = {encoding: 'utf8', flags: self.logAppend ? 'a+' : 'w+'};
+  var stdoutStream = STDOUT_STREAM = fs.createWriteStream(self.outFile, options);
+  var errorStream = ERROR_STREAM = self.errFile === self.outFile ?
+    stdoutStream :
+    fs.createWriteStream(self.errFile, options);
 
   IN_RUNNER = true;
 
-  process.argv.splice(3, 8);
   process.stdout.write = function(x) {
     stdoutStream._hasPendingData = !stdoutStream.write(x);
   }

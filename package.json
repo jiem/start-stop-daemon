@@ -1,7 +1,7 @@
 {
   "name": "start-stop-daemon",
-  "description": "A simple function to create native child_process.fork start-stop-daemon scripts that restart automatically when crashing",
-  "version": "0.0.1",
+  "description": "An 1-function module to easily create native child_process.fork start-stop-daemon scripts with crash monitoring",
+  "version": "0.0.2",
   "author": "Jie Meng-Gerard <contact@jie.fr>",
   "repository": "git://github.com/jiem/start-stop-daemon",
   "keywords": ["daemon", "supervisor", "monitor", "sysadmin", "tools"],

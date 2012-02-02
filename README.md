@@ -22,7 +22,7 @@ Created daemons are self-monitored and restart automatically when crashing (a cu
 * Get the status of the daemon with the command `node daemon.js status`
 * Run the script not as a daemon with the command `node daemon.js run`
     
-### Possible `options` fields:
+### Possible `options` fields
 
 * `pidFile`: the file to log the daemon PID. Default to `'daemon.pid'`.
 * `outFile`: the file to log the daemon stdout. Default to `'daemon.out'`.
@@ -35,7 +35,21 @@ Created daemons are self-monitored and restart automatically when crashing (a cu
 
 The `options` default fields can be found in the `startStopDaemon.defaultOptions` object.
 
-### Handling crashes (in the `onCrash` listener only):
+### Command-line options
+
+    --logAppend           append to existing stdout and stderr files
+    --pid <pidFile>       specify pid file
+    --out <stdoutFile>    specify stdout file
+    --err <stderrFile>    specify stderr file
+    --max-crash <value>   specify maximum number of crashes by minute
+
+  You can also pass your own arguments that will be transferred to the daemon, a *port* argument for example:
+  
+    node daemon.js start --port 1095 --out daemon.log  --err daemon.log  --logAppend
+
+  then we'll have `process.argv[3] === '--port'` and `process.argv[4] === '1095'` in the daemon process.
+
+### Handling crashes (in the `onCrash` listener only)
 
 Exit daemon:  
 
