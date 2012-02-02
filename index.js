@@ -276,7 +276,7 @@ function _starter(self) {
   self.commandLineErr || process.argv.push('--err', self.errFile);
   process.argv[1] = '--monitor';
   process.argv.push(startTime);
-  child = child_process.spawn(command, process.argv, {setsid: true});
+  child = child_process.spawn(command, process.argv, {env: process.env, setsid: true});
   if (child) {
     fs.writeFileSync(self.pidFile, child.pid + '|' + startTime);
     self.emit('start', {status: 'daemonForkSuccessful', pid: child.pid});    
@@ -293,7 +293,7 @@ function _monitor(self) {
   var runner;
 
   function fork() {
-    runner = child_process.fork(script, process.argv, {setsid: true});
+    runner = child_process.fork(script, process.argv, {env: process.env, setsid: true});
     if (process.argv.indexOf('--logAppend') === -1)
       process.argv.splice(process.argv.length - 1, 0, '--logAppend');
     if (runner) {
