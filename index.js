@@ -53,6 +53,7 @@ function startStopDaemon(options, action) {
       _monitor(daemon);
       break;
     case '--runner':
+      argv.splice(2,1); // removes the --runner argument from argv
       _runner(daemon);
       break;
     case 'run':
