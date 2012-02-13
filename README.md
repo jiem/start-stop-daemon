@@ -47,7 +47,7 @@ The `options` default fields can be found in the `startStopDaemon.defaultOptions
   
     node daemon.js start --port 1095 --out daemon.log  --err daemon.log  --logAppend
 
-  then we'll have `process.argv[3] === '--port'` and `process.argv[4] === '1095'` in the daemon process.
+  we make sure that `argv` remains unpolluted in your script: `process.argv[2] === '--port'` and `process.argv[3] === '1095'` in the daemon process (like if start-stop-daemon was not being used).
 
 ### Handling crashes (in the `onCrash` listener only)
 
