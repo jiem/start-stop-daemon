@@ -24,7 +24,7 @@ Created daemons are self-monitored and restart automatically when crashing (a cu
     
 ### Possible `options` fields
 
-* `pidFile`: the file to log the daemon PID. Default to `'daemon.pid'`.
+* `daemonFile`: the file to log the daemon PIDs, startTime, etc... Default to `'daemon.dmn'`.
 * `outFile`: the file to log the daemon stdout. Default to `'daemon.out'`.
 * `errFile`: the file to log the daemon crashes (uncaught exceptions). Default to `'daemon.err'`.
 * `maxCrash`: the maximum number of crashes by minute. Past this number, the daemon exits. Default to `5`.
@@ -33,45 +33,46 @@ Created daemons are self-monitored and restart automatically when crashing (a cu
 * `onStatus`: listener fired when we get the status of the daemon. Default to displaying a status message.
 * `onCrash`: listener fired when the daemon crashes. Default to restarting the daemon.
 
-The `options` default fields can be found in the `startStopDaemon.defaultOptions` object.
-
 ### Command-line options
 
-    --logAppend           append to existing stdout and stderr files
-    --pid <pidFile>       specify pid file
-    --out <stdoutFile>    specify stdout file
-    --err <stderrFile>    specify stderr file
-    --max-crash <value>   specify maximum number of crashes by minute
+    --logAppend            append to existing stdout and stderr files
+    --daemon <daemonFile>  specify daemon file for PIDs, startTime...
+    --out <stdoutFile>     specify stdout file
+    --err <stderrFile>     specify stderr file
+    --max-crash <value>    specify maximum number of crashes by minute
 
-  You can also pass your own arguments that will be transferred to the daemon, a *port* argument for example:
+  You can also pass your own arguments, they'll be transferred to the daemon process:
   
-    node daemon.js start --port 1095 --out daemon.log  --err daemon.log  --logAppend
+    node daemon.js start --port 1095
 
-  then we'll have `process.argv[3] === '--port'` and `process.argv[4] === '1095'` in the daemon process.
+  In the daemon process, we'll have `process.argv[3] === '--port'` and `process.argv[4] === '1095'`.
 
 ### Handling crashes (in the `onCrash` listener only)
 
 Exit daemon:  
 
-    startStopDaemon.cleanCrash('exit')
+    this.crashExit();
 
-Restart the daemon, append stdout to the previous stdout file, append the crash error to the error file:
+Restart the daemon with an option to append stdout/stderr to the previous stdout/stderr files
 
-    startStopDaemon.cleanCrash('restart')
+    this.crashRestart([logAppend]); //logAppend default to true
 
 
 ## Example 1: `server.js`, a stupid web server daemon
 
 ``` js
-    var startStopDaemon = require('start-stop-daemon');
-    var http = require('http');
+  var startStopDaemon = require('..');
+  var http = require('http');
 
-    startStopDaemon(function() {
-      http.createServer(function(req, res) {
-        console.log(req.connection.remoteAddress + ' at ' + new Date());
-        res.end(new Date() + ': Hello world');
-      }).listen(8080);
-    });
+  var HELLO_WORLD = []; 
+
+  startStopDaemon(function() {
+    http.createServer(function(req, res) {   
+      console.log(req.connection.remoteAddress + ' accessed ' + req.url);
+      HELLO_WORLD.push('Hello world! Welcome to our fantastic page ' + req.url);
+      res.end(HELLO_WORLD.join('\n'));
+    }).listen(8080);
+  });
 ```
 
 Execute the command `node server.js start`  
@@ -83,41 +84,37 @@ Check the stdout file `server.out`.
 ## Example 2: `crasher.js`, a timer daemon that crashes every second
 
 ``` js
-    var startStopDaemon = require('start-stop-daemon');
+  var startStopDaemon = require('..');
 
-    var options = {
-      outFile: 'customStdoutFile.log', 
-      errFile: 'customErrorFile.log'
-    };
+  var options = {
 
-    options.onCrash = function(e) {
+    outFile: 'customOutFile.log',   
+    errFile: 'customErrFile.log',
 
-      // Your own code to handle the crash: a mail notification for example
-      //....
-
-      // Log the crash in the stdout file
+    onCrash: function(e) {  
+      // Logging crash in sdtout file    
       console.log('CRASH');
+      // Restart daemon if it crashes during the 3 first seconds, exit it otherwise
+      Date.now() - this.startTime <= 3000 ?
+        this.crashRestart() :
+        this.crashExit();
+    }
 
-      // Restart the daemon if it crashes during the 3 first seconds, exit the daemon otherwise
-      new Date() - this.startDate <= 3000 ?
-        startStopDaemon.cleanCrash('restart') :
-        startStopDaemon.cleanCrash('exit');
+  };
 
-     }
-
-    startStopDaemon(options, function() {
-      var count = 0;
-      setInterval(function() {
-        if (count >= 5)
-          throw new Error('to crash the timer');    
-        console.log('0.' + 2 * count++ + ' second');             
-      }, 200);      
-    });
+  startStopDaemon(options, function() {
+    var count = 0;
+    setInterval(function() {
+      if (count >= 5)
+        throw new Error('to crash the timer');    
+      console.log('0.' + 2 * count++ + ' second');             
+    }, 200);      
+  });
 ```
 
 Execute the command `node crasher.js start`  
 Wait 4 seconds then execute the command `node crasher.js status` to check that the daemon correctly exited  
-Check the stdout file `customStdoutFile.log` and the error file `customErrorFile.log`.     
+Check the files `customOutFile.log` and `customErrFile.log`.     
     
 
 # MIT License 

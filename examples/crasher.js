@@ -1,24 +1,20 @@
 var startStopDaemon = require('..');
 
 var options = {
-  outFile: 'customStdoutFile.log', 
-  errFile: 'customErrorFile.log'
+  
+  outFile: 'customOutFile.log',   
+  errFile: 'customErrFile.log',
+  
+  onCrash: function(e) {  
+    // Logging crash in sdtout file    
+    console.log('CRASH');
+    // Restart daemon if it crashes during the 3 first seconds, exit it otherwise
+    Date.now() - this.startTime <= 3000 ?
+      this.crashRestart() :
+      this.crashExit();
+  }
+ 
 };
-
-options.onCrash = function(e) {
-
-  // Your own code to handle the crash: a mail notification for example
-  //....
-
-  // Log the crash in the stdout file
-  console.log('CRASH');
-
-  // Restart the daemon if it crashes during the 3 first seconds, exit the daemon otherwise
-  new Date() - this.startDate <= 3000 ?
-    startStopDaemon.cleanCrash('restart') :
-    startStopDaemon.cleanCrash('exit');
-
- }
 
 startStopDaemon(options, function() {
   var count = 0;
