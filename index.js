@@ -24,11 +24,12 @@ function startStopDaemon(options, action) {
       console.log('\033[31m'
         + 'Usage: node ' + SCRIPT_NAME  + ' {start|stop|restart|status|run}\n'
         + 'Options:\n'
-        + '  --logAppend            append to existing stdout/stderr files\n'
-        + '  --daemon <daemonFile>  specify daemon file for PID, startTime...\n'
-        + '  --out <stdoutFile>     specify stdout file\n'
-        + '  --err <stderrFile>     specify stderr file\n'
-        + '  --max-crash <value>    specify maximum number of crashes by minute'
+        + '  --logAppend              append to existing stdout/stderr files\n'
+        + '  --daemon <daemonFile>    specify daemon file for PID, startTime...\n'
+        + '  --out <stdoutFile>       specify stdout file\n'
+        + '  --err <stderrFile>       specify stderr file\n'
+        + '  --max-crash <value>      specify maximum number of crashes by minute'
+        + '  --crash-timeout <value>  specify a crash timeout in ms before restarting'
         + '\033[39m');
   }
   
@@ -60,6 +61,8 @@ function StartStopDaemon(options, action) {
     argv[i] : (options.errFile || daemonName + '.err');
   this.maxCrash = (i = argv.indexOf('--max-crash') + 1) ?
     parseInt(argv[i]) : (options.maxCrash || 5);
+  this.crashTimeout = (i = argv.indexOf('--crash-timeout') + 1) ?
+    parseInt(argv[i]) : options.crashTimeout;
   this.logAppend = argv.indexOf('--logAppend') !== -1 || options.logAppend; 
   
   this.action = action;
@@ -218,8 +221,10 @@ function _monitor(self) {
           if (self.crashDates.length < self.maxCrash) {
             self.crashDates.unshift(currentDate);
             argv[0] = m.logAppend && argv.indexOf('--logAppend') === -1 ?
-                'runnerA' : 'runner';            
-            fork();            
+                'runnerA' : 'runner';
+            self.crashTimeout ?
+              setTimeout(fork, self.crashTimeout) :
+              fork();            
           } else {
             killRunner();
             process.exit(1);

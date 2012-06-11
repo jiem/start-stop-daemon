@@ -28,6 +28,7 @@ Created daemons are self-monitored and restart automatically when crashing (a cu
 * `outFile`: the file to log the daemon stdout. Default to `'daemon.out'`.
 * `errFile`: the file to log the daemon crashes (uncaught exceptions). Default to `'daemon.err'`.
 * `maxCrash`: the maximum number of crashes by minute. Past this number, the daemon exits. Default to `5`.
+* `crashTimeout`: a crash timeout before restarting (when restarting immediately, a server port can still be bound). Default to `0`.
 * `onStart`: listener fired when we start the daemon. Default to displaying a start message.
 * `onStop`: listener fired when we stop the daemon. Default to displaying a stop message.
 * `onStatus`: listener fired when we get the status of the daemon. Default to displaying a status message.
@@ -35,11 +36,12 @@ Created daemons are self-monitored and restart automatically when crashing (a cu
 
 ### Command-line options
 
-    --logAppend            append to existing stdout and stderr files
-    --daemon <daemonFile>  specify daemon file for PIDs, startTime...
-    --out <stdoutFile>     specify stdout file
-    --err <stderrFile>     specify stderr file
-    --max-crash <value>    specify maximum number of crashes by minute
+    --logAppend              append to existing stdout and stderr files
+    --daemon <daemonFile>    specify daemon file for PIDs, startTime...
+    --out <stdoutFile>       specify stdout file
+    --err <stderrFile>       specify stderr file
+    --max-crash <value>      specify maximum number of crashes by minute
+    --crash-timeout <value>  specify a crash timeout in ms before restarting
 
   You can also pass your own arguments, they'll be transferred to the daemon process:
   
