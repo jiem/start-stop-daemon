@@ -318,7 +318,7 @@ function _saveDaemonFile(self) {
 //==============================================================================
 function _loadDaemonFile(self) {
   var daemon;  
-  if ((fs.existsSync || path.existsSync)(self.daemonFile)) {
+  if ((fs.existsSync || fs.existsSync)(self.daemonFile)) {
     daemon = JSON.parse(fs.readFileSync(self.daemonFile, 'utf8'));
     self.monitorPID = daemon.monitorPID;
     self.runnerPID = daemon.runnerPID;
