@@ -195,7 +195,9 @@ function _starter(self) {
     {status: 'daemonForkSuccessful', pid: child.pid} :
     {status: 'daemonForkUnsuccessful'}
   );  
-  process.exit(0);
+  setTimeout(function() {
+    process.exit(0);
+  }, 200);    
 }
 
 //==============================================================================
