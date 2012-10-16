@@ -1,6 +1,6 @@
 # start-stop-daemon
 
-Easily transform a nodejs script into a start-stop-daemon script.
+Easily transform a JS script into a start-stop-daemon script.
 
 ## Installation
 
@@ -19,7 +19,7 @@ Easily transform a nodejs script into a start-stop-daemon script.
 * Get the status of the daemon with the command `node script.js status`
 * Run the script normally (not as a daemon) with the command `node script.js`
     
-## Possible `options` fields
+## Options
 
 * `outFile`: the file to log the daemon stdout. Default to `'out.log'`.
 * `errFile`: the file to log the daemon stderr. Default to `'err.log'`.
@@ -100,6 +100,7 @@ See the example below.
 ## Implementation
 
 As of version 0.1.0, daemons are handled by the [forever][3] module.
+This refactoring makes `start-stop-daemon` much more robust than with my previous implementation.
 
 ## MIT License 
 
