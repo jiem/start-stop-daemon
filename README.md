@@ -99,7 +99,7 @@ See the example below.
     
 ## Implementation
 
-As of version 0.1.0, daemons are handled by the [forever][3] module.
+As of version 0.1.0, daemons are handled by the [forever][3] module.  
 This refactoring makes `start-stop-daemon` much more robust than with my previous implementation.
 
 ## MIT License 
