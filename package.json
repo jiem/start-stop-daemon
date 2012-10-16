@@ -1,6 +1,6 @@
 {
   "name": "start-stop-daemon",
-  "description": "Easily transform a nodejs script into a start-stop-daemon script",
+  "description": "Easily transform a JS script into a start-stop-daemon script",
   "version": "0.1.0",
   "author": "Jie Meng-Gerard <contact@jie.fr>",
   "repository": "git://github.com/jiem/start-stop-daemon",
