@@ -100,11 +100,11 @@ The same behavior can now be obtained by using the event `'restart'`. See the ex
     
 ## Implementation
 
-As of version 0.1.0, daemons are handled by the [forever][3] module.  
-This refactoring makes `start-stop-daemon` much more robust than with my previous implementation.   
-Backward compatibility (for versions <= 0.1.0) is ensured for the options except for the events (`onStart`, `onCrash`, ...)
-which are now handled through an `EventEmitter` with a proper `on` method ([see here][2]).   
-Command-line options are not backward compatible since they are now merged with the forever ones ([see here][1]).
+As of version 0.1.0, daemons are handled by the [forever][3] module.
+This refactoring makes `start-stop-daemon` much more robust than with my previous implementation.
+Backward compatibility (versions <= 0.1.0) is ensured for the options except for the events (`onStart`, `onCrash`, ...)
+which are now handled through an `EventEmitter` with a proper `on` method ([more here][2]).
+Command-line options are not backward compatible since they are now merged with the forever ones ([more here][1]).
 
 
 ## MIT License 
