@@ -10,6 +10,6 @@
     "node": "0.8.x"
   },
   "dependencies": {
-    "forever": "0.10.1"
+    "forever": "0.10.0"
   }
 }
