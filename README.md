@@ -1,6 +1,6 @@
 # start-stop-daemon
 
-A module to easily transform a nodejs script into a start-stop-daemon script.
+Easily transform a nodejs script into a start-stop-daemon script.
 
 ## Installation
 
@@ -32,7 +32,7 @@ Options can also be passed at command-line: `node script.js start --outFile cust
 ## Events
 
 Available events: `'error'`, `'start'`, `'stop'`, `'restart'`, `'exit'`, `'stdout'`, `'stderr'` (More details [here][2]).  
-Add a listener to an event with the `on` method:
+Add a listener with the `on` method:
 
     startStopDaemon(function() {
       //code to daemonize
@@ -46,31 +46,29 @@ See the example below.
 ``` js
   var startStopDaemon = require('start-stop-daemon');
   var http = require('http');
-  var fs = require('fs');
 
   startStopDaemon(function() {  
-
     http.createServer(function(req, res) {           
       console.log(req.connection.remoteAddress + ' accessed ' + req.url);
       if (req.url === '/error') 
         throw new Error('to crash server');        
       res.end('Hello world! Thanks for accessing ' + req.url);        
     }).listen(1095);    
-
   })
 
-  .on('restart', function() { //event handler triggered when the server restarts 
-    this.stdout.write('Restarting at ' + new Date() + '\n'); //use this.stdout.write to write in outFile, not console.log
+  .on('restart', function() {
+    //use this.stdout.write to write in the stdout log file, not console.log
+    this.stdout.write('Restarting at ' + new Date() + '\n'); 
   });
 ```
 
-Start the server as a daemon with `node server.js start`  
-Test the server in the browser at http://localhost:1095  
-Make the server crash by going to http://localhost:1095/error  
-Go back to http://localhost:1095 to check that the server restarted correctly after the crash    
-See the server's status with `node server.js status`    
-Stop the server with `node server.js stop`    
-Check the stdout file `out.log`    
+* Start the server as a daemon with `node server.js start`  
+* Test the server in the browser at *http://localhost:1095*  
+* Make the server crash by going to *http://localhost:1095/error*  
+* Go back to *http://localhost:1095* to check that the server restarted correctly after the crash    
+* Check the server's status with `node server.js status`    
+* Stop the server with `node server.js stop`    
+* Check the stdout file `out.log`    
 
 ## Example 2: `crasher.js`, a timer daemon that crashes every second
 
@@ -95,13 +93,13 @@ Check the stdout file `out.log`
   });
 ```
 
-Start the timer as a daemon with `node crasher.js start`  
-Wait 4 seconds then see the timer's status with `node crasher.js status` to check that the daemon correctly exited  
-Check the log files `customOutFile.log` and `customErrFile.log`.     
+* Start the timer as a daemon with `node crasher.js start`  
+* Wait 4 seconds then check the timer's status with `node crasher.js status` to check that the daemon correctly exited  
+* Check the log files `customOutFile.log` and `customErrFile.log`.     
     
-## How does it work internally?
+## Internals
 
-As of version 0.1.0, daemons are handled by the [`forever`][3] module.
+As of version 0.1.0, daemons are handled by the [forever][3] module.
 
 ## MIT License 
 
@@ -127,7 +125,7 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-0: https://github.com/nodejitsu/forever-monitor#options-available-when-using-forever-in-nodejs
-1: https://github.com/nodejitsu/forever#using-forever-from-the-command-line
-2: https://github.com/nodejitsu/forever-monitor#events-available-when-using-an-instance-of-forever-in-nodejs
-3: https://github.com/nodejitsu/forever
+[0]: https://github.com/nodejitsu/forever-monitor#options-available-when-using-forever-in-nodejs
+[1]: https://github.com/nodejitsu/forever#using-forever-from-the-command-line
+[2]: https://github.com/nodejitsu/forever-monitor#events-available-when-using-an-instance-of-forever-in-nodejs
+[3]: https://github.com/nodejitsu/forever
