@@ -26,13 +26,13 @@ Easily transform a nodejs script into a start-stop-daemon script.
 * `max`: the max number of times the script should run. Default to `5`.
 * ...
 
-More options available at [forever-monitor][0].  
-Options can also be passed at command-line: `node script.js start --outFile custom.log` (More details [here][1]).
+More options documented on the [forever-monitor page][0].  
+Options can also be passed from the command-line: `node script.js start --outFile custom.log` (more details [here][1]).
 
 ## Events
 
-Available events: `'error'`, `'start'`, `'stop'`, `'restart'`, `'exit'`, `'stdout'`, `'stderr'` (More details [here][2]).  
-Add a listener with the `on` method:
+Available events: `'error'`, `'start'`, `'stop'`, `'restart'`, `'exit'`, `'stdout'`, `'stderr'` (more details [here][2]).  
+Use the `on` method to add a listener:
 
     startStopDaemon(function() {
       //code to daemonize
@@ -66,7 +66,7 @@ See the example below.
 * Test the server in the browser at *http://localhost:1095*  
 * Make the server crash by going to *http://localhost:1095/error*  
 * Go back to *http://localhost:1095* to check that the server restarted correctly after the crash    
-* Check the server's status with `node server.js status`    
+* Get the server's status with `node server.js status`    
 * Stop the server with `node server.js stop`    
 * Check the stdout file `out.log`    
 
@@ -94,10 +94,10 @@ See the example below.
 ```
 
 * Start the timer as a daemon with `node crasher.js start`  
-* Wait 4 seconds then check the timer's status with `node crasher.js status` to check that the daemon correctly exited  
+* Wait 4 seconds then get the timer's status with `node crasher.js status` to check that the daemon correctly exited  
 * Check the log files `customOutFile.log` and `customErrFile.log`.     
     
-## Internals
+## Implementation
 
 As of version 0.1.0, daemons are handled by the [forever][3] module.
 
