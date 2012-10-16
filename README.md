@@ -1,125 +1,109 @@
 # start-stop-daemon
 
-An 1-function Node.js module to easily create native `child_process.fork` start-stop-daemon scripts.  
-Created daemons are self-monitored and restart automatically when crashing (a custom crash handler can be attached too).  
+A module to easily transform a nodejs script into a start-stop-daemon script.
 
 ## Installation
 
     npm install start-stop-daemon
 
-
 ## Usage
 
-    //file daemon.js    
+    //file script.js    
     startStopDaemon([options], function() {
       //awesome code you want to daemonize
     });
 
-
-* Start the daemon with the command `node daemon.js start`
-* Stop the daemon with the command `node daemon.js stop`
-* Restart the daemon with the command `node daemon.js restart`
-* Get the status of the daemon with the command `node daemon.js status`
-* Run the script not as a daemon with the command `node daemon.js run`
+* Start your script as a daemon with the command `node script.js start`
+* Stop the daemon with the command `node script.js stop`
+* Restart the daemon with the command `node script.js restart`
+* Get the status of the daemon with the command `node script.js status`
+* Run the script normally (not as a daemon) with the command `node script.js`
     
-### Possible `options` fields
+## Possible `options` fields
 
-* `daemonFile`: the file to log the daemon PIDs, startTime, etc... Default to `'daemon.dmn'`.
-* `outFile`: the file to log the daemon stdout. Default to `'daemon.out'`.
-* `errFile`: the file to log the daemon crashes (uncaught exceptions). Default to `'daemon.err'`.
-* `maxCrash`: the maximum number of crashes by minute. Past this number, the daemon exits. Default to `5`.
-* `crashTimeout`: a crash timeout before restarting (when restarting immediately, a server port can still be bound). Default to `0`.
-* `onStart`: listener fired when we start the daemon. Default to displaying a start message.
-* `onStop`: listener fired when we stop the daemon. Default to displaying a stop message.
-* `onStatus`: listener fired when we get the status of the daemon. Default to displaying a status message.
-* `onCrash`: listener fired when the daemon crashes. Default to restarting the daemon.
+* `outFile`: the file to log the daemon stdout. Default to `'out.log'`.
+* `errFile`: the file to log the daemon stderr. Default to `'err.log'`.
+* `max`: the max number of times the script should run. Default to `5`.
+* ...
 
-### Command-line options
+More options available at [forever-monitor][0].  
+Options can also be passed at command-line: `node script.js start --outFile custom.log` (More details [here][1]).
 
-    --logAppend              append to existing stdout and stderr files
-    --daemon <daemonFile>    specify daemon file for PIDs, startTime...
-    --out <stdoutFile>       specify stdout file
-    --err <stderrFile>       specify stderr file
-    --max-crash <value>      specify maximum number of crashes by minute
-    --crash-timeout <value>  specify a crash timeout in ms before restarting
+## Events
 
-  You can also pass your own arguments, they'll be transferred to the daemon process:
-  
-    node daemon.js start --port 1095
+Available events: `'error'`, `'start'`, `'stop'`, `'restart'`, `'exit'`, `'stdout'`, `'stderr'` (More details [here][2]).  
+Add a listener to an event with the `on` method:
 
-  In the daemon process, we'll have `process.argv[3] === '--port'` and `process.argv[4] === '1095'`.
+    startStopDaemon(function() {
+      //code to daemonize
+    }).on(event, listener);  
 
-### Handling crashes (in the `onCrash` listener only)
-
-Exit daemon:  
-
-    this.crashExit();
-
-Restart the daemon with an option to append stdout/stderr to the previous stdout/stderr files
-
-    this.crashRestart([logAppend]); //logAppend default to true
+See the example below.
 
 
-## Example 1: `server.js`, a stupid web server daemon
+## Example 1: `server.js`, a simple http server daemon
 
 ``` js
-  var startStopDaemon = require('..');
+  var startStopDaemon = require('start-stop-daemon');
   var http = require('http');
+  var fs = require('fs');
 
-  var HELLO_WORLD = []; 
+  startStopDaemon(function() {  
 
-  startStopDaemon(function() {
-    http.createServer(function(req, res) {   
+    http.createServer(function(req, res) {           
       console.log(req.connection.remoteAddress + ' accessed ' + req.url);
-      HELLO_WORLD.push('Hello world! Welcome to our fantastic page ' + req.url);
-      res.end(HELLO_WORLD.join('\n'));
-    }).listen(8080);
+      if (req.url === '/error') 
+        throw new Error('to crash server');        
+      res.end('Hello world! Thanks for accessing ' + req.url);        
+    }).listen(1095);    
+
+  })
+
+  .on('restart', function() { //event handler triggered when the server restarts 
+    this.stdout.write('Restarting at ' + new Date() + '\n'); //use this.stdout.write to write in outFile, not console.log
   });
 ```
 
-Execute the command `node server.js start`  
-Play with the server in your browser on http://localhost:8080  
-Execute the command `node server.js status`  
-Execute the command `node server.js stop`  
-Check the stdout file `server.out`.
+Start the server as a daemon with `node server.js start`  
+Test the server in the browser at http://localhost:1095  
+Make the server crash by going to http://localhost:1095/error  
+Go back to http://localhost:1095 to check that the server restarted correctly after the crash    
+See the server's status with `node server.js status`    
+Stop the server with `node server.js stop`    
+Check the stdout file `out.log`    
 
 ## Example 2: `crasher.js`, a timer daemon that crashes every second
 
 ``` js
-  var startStopDaemon = require('..');
+  var startStopDaemon = require('start-stop-daemon');
 
   var options = {
-
     outFile: 'customOutFile.log',   
     errFile: 'customErrFile.log',
-
-    onCrash: function(e) {  
-      // Logging crash in sdtout file    
-      console.log('CRASH');
-      // Restart daemon if it crashes during the 3 first seconds, exit it otherwise
-      Date.now() - this.startTime <= 3000 ?
-        this.crashRestart() :
-        this.crashExit();
-    }
-
+    max: 3 //the script will run 3 times at most
   };
 
   startStopDaemon(options, function() {
     var count = 0;
     setInterval(function() {
-      if (count >= 5)
-        throw new Error('to crash the timer');    
-      console.log('0.' + 2 * count++ + ' second');             
+      console.log(++count * 200 + 'ms');
+      if (count >= 5) {
+        console.log('timer crashing after 1 second\n');
+        throw new Error('to crash timer');                       
+      }
     }, 200);      
   });
 ```
 
-Execute the command `node crasher.js start`  
-Wait 4 seconds then execute the command `node crasher.js status` to check that the daemon correctly exited  
-Check the files `customOutFile.log` and `customErrFile.log`.     
+Start the timer as a daemon with `node crasher.js start`  
+Wait 4 seconds then see the timer's status with `node crasher.js status` to check that the daemon correctly exited  
+Check the log files `customOutFile.log` and `customErrFile.log`.     
     
+## How does it work internally?
 
-# MIT License 
+As of version 0.1.0, daemons are handled by the [`forever`][3] module.
+
+## MIT License 
 
 Copyright (c) 2012 Jie Meng-Gerard <contact@jie.fr>
 
@@ -141,3 +125,9 @@ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
 CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+0: https://github.com/nodejitsu/forever-monitor#options-available-when-using-forever-in-nodejs
+1: https://github.com/nodejitsu/forever#using-forever-from-the-command-line
+2: https://github.com/nodejitsu/forever-monitor#events-available-when-using-an-instance-of-forever-in-nodejs
+3: https://github.com/nodejitsu/forever

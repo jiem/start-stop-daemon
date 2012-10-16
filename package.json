@@ -1,12 +1,15 @@
 {
   "name": "start-stop-daemon",
-  "description": "An 1-function module to easily create native child_process.fork start-stop-daemon scripts with crash monitoring",
-  "version": "0.0.6",
+  "description": "Easily transform a nodejs script into a start-stop-daemon script",
+  "version": "0.1.0",
   "author": "Jie Meng-Gerard <contact@jie.fr>",
   "repository": "git://github.com/jiem/start-stop-daemon",
   "keywords": ["daemon", "supervisor", "monitor", "sysadmin", "tools"],
   "main": "./index.js",
   "engines": {
-    "node": ">= 0.5.0"
+    "node": "0.8.x"
+  },
+  "dependencies": {
+    "forever": "0.10.1"
   }
 }
