@@ -121,6 +121,9 @@ function startDaemon(options) {
   });
   monitor.send(JSON.stringify(options));
   monitor.unref();  
+  /* Close the IPC channel between parent and child; otherwise
+     the parent will never terminate, which defeats daemonization. */
+  monitor.disconnect();
   
   console.log('\033[32m' + SCRIPT + ' daemon successfully started\033[0m');
   
